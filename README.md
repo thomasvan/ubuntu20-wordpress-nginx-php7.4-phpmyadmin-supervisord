@@ -74,5 +74,5 @@ Now that you've got SSH access, you can setup your FTP client the same way, or t
 To get the MySQL's password, check the top of the docker container logs for it:
 
 ```bash
-$ cat /wordpress-db-pw.txt
+$ cat /dbuser-pw.txt
 ```

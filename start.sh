@@ -1,27 +1,30 @@
 #!/bin/bash
-if [ ! -f /wordpress-db-pw.txt ]; then
+if [ ! -f /dbuser-pw.txt ]; then
     #mysql has to be started this way as it doesn't work to call from /etc/init.d
     /usr/sbin/mysqld --basedir=/usr --datadir=/var/lib/mysql --plugin-dir=/usr/lib/mysql/plugin --user=mysql --log-error=/var/log/mysql/error.log --pid-file=/var/run/mysqld/mysqld.pid --socket=/var/run/mysqld/mysqld.sock --port=3306 &
     sleep 10s
     # Here we generate random passwords (thank you pwgen!). The first two are for mysql users, the last batch for random keys in wp-config.php
-    WORDPRESS_PASSWORD=`pwgen -c -n -1 12`
+    DBNAME="maindb"
+    DBPASSWORD=`pwgen -c -n -1 12`
+    DBUSER="dbuser"
     #This is so the passwords show up in logs.
 
-    echo wordpress password: $WORDPRESS_PASSWORD
-    echo $WORDPRESS_PASSWORD > /wordpress-db-pw.txt
+    echo DB PASSWORD: $DBPASSWORD
+    echo $DBPASSWORD > /dbuser-pw.txt
 
-    mysql -uroot -e "create database wordpress"
-    mysql -uroot -e "CREATE USER wordpress@localhost IDENTIFIED WITH mysql_native_password BY '$WORDPRESS_PASSWORD';"
-    mysql -uroot -e "GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@localhost;"
+    mysql -uroot -e "create database $DBNAME"
+    mysql -uroot -e "CREATE USER $DBUSER@localhost IDENTIFIED WITH mysql_native_password BY '$DBPASSWORD';"
+    mysql -uroot -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER@localhost;"
     killall mysqld
 fi
 
 if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
-    WORDPRESS_DB="wordpress"
-    WORDPRESS_PASSWORD=`cat /wordpress-db-pw.txt`
-    sed -e "s/database_name_here/$WORDPRESS_DB/
-    s/username_here/$WORDPRESS_DB/
-    s/password_here/$WORDPRESS_PASSWORD/
+    DBNAME="maindb"
+    DBUSER="dbuser"
+    DBPASSWORD=`cat /dbuser-pw.txt`
+    sed -e "s/database_name_here/$DBNAME/
+    s/username_here/$DBUSER/
+    s/password_here/$DBPASSWORD/
     /'AUTH_KEY'/s/put your unique phrase here/`pwgen -c -n -1 65`/
     /'SECURE_AUTH_KEY'/s/put your unique phrase here/`pwgen -c -n -1 65`/
     /'LOGGED_IN_KEY'/s/put your unique phrase here/`pwgen -c -n -1 65`/
@@ -49,8 +52,6 @@ if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
     }
     }
 ENDL
-
-    chown -R wordpress: /usr/share/nginx/www/
 
 fi
 
