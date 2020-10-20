@@ -64,7 +64,7 @@ http://127.0.0.1:9011
 You can also SSH to your container on 127.0.0.1:2222. The default password is _wordpress_, and can also be found in .ssh-default-pass.
 
 ```bash
-$ ssh -p 2222 wordpress@127.0.0.1
+$ ssh -p 2222 webuser@127.0.0.1
 # To drop into root
 $ sudo -s
 ```
