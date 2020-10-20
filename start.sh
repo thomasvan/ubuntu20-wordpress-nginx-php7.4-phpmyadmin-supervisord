@@ -1,20 +1,18 @@
 #!/bin/bash
 if [ ! -f /wordpress-db-pw.txt ]; then
     #mysql has to be started this way as it doesn't work to call from /etc/init.d
-    /usr/bin/mysqld_safe &
+    /usr/sbin/mysqld --basedir=/usr --datadir=/var/lib/mysql --plugin-dir=/usr/lib/mysql/plugin --user=mysql --log-error=/var/log/mysql/error.log --pid-file=/var/run/mysqld/mysqld.pid --socket=/var/run/mysqld/mysqld.sock --port=3306 &
     sleep 10s
     # Here we generate random passwords (thank you pwgen!). The first two are for mysql users, the last batch for random keys in wp-config.php
-    MYSQL_PASSWORD=`pwgen -c -n -1 12`
     WORDPRESS_PASSWORD=`pwgen -c -n -1 12`
     #This is so the passwords show up in logs.
-    echo mysql root password: $MYSQL_PASSWORD
+
     echo wordpress password: $WORDPRESS_PASSWORD
-    echo $MYSQL_PASSWORD > /mysql-root-pw.txt
     echo $WORDPRESS_PASSWORD > /wordpress-db-pw.txt
 
-    mysqladmin -u root password $MYSQL_PASSWORD
-    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE wordpress; GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'; FLUSH PRIVILEGES;"
+    mysql -uroot -e "create database wordpress"
+    mysql -uroot -e "CREATE USER wordpress@localhost IDENTIFIED WITH mysql_native_password BY '$WORDPRESS_PASSWORD';"
+    mysql -uroot -e "GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@localhost;"
     killall mysqld
 fi
 
@@ -34,7 +32,7 @@ if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
     /'NONCE_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/" /usr/share/nginx/www/wp-config-sample.php > /usr/share/nginx/www/wp-config.php
 
     # Download nginx helper plugin
-    curl -O `curl -i -s https://wordpress.org/plugins/nginx-helper/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+    curl -O `curl -i -s https://wordpress.org/plugins/nginx-helper/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+\.zip"`
     unzip -o nginx-helper.*.zip -d /usr/share/nginx/www/wp-content/plugins
 
     # Activate nginx plugin and set up pretty permalink structure once logged in
@@ -57,4 +55,4 @@ ENDL
 fi
 
 # start all the services
-/usr/local/bin/supervisord -n -c /etc/supervisord.conf
+/usr/bin/supervisord -n -c /etc/supervisord.conf
