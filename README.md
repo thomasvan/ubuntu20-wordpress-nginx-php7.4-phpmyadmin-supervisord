@@ -61,7 +61,7 @@ You can start/stop/restart and view the error logs of nginx and php-fpm services
 http://127.0.0.1:9011
 ```
 
-You can also SSH to your container on 127.0.0.1:2222. The default password is _wordpress_, and can also be found in .ssh-default-pass.
+You can also SSH to your container on 127.0.0.1:2222. The default password is _webuser_, and can also be found in .ssh-default-pass.
 
 ```bash
 $ ssh -p 2222 webuser@127.0.0.1
