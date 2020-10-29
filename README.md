@@ -3,7 +3,7 @@
 A Docker Image that has the latest wordpress, nginx, phpmyadmin, supervisord and more on Ubuntu 20.04.
 Based on [this](https://hub.docker.com/r/thomasvan/ubuntu20-wordpress-nginx-php7.4-phpmyadmin-supervisord/).
 
-## Todo:
+## Todo
 
 1. If anyone has suggestions please leave a comment on [this GitHub issue](https://github.com/thomasvan/ubuntu20-wordpress-nginx-php7.4-phpmyadmin-supervisord/issues/1).
 2. Implement [Docker Compose](https://docs.docker.com/compose/) for a quicker setup.
@@ -28,7 +28,7 @@ $ sudo docker build -t="thomasvan/ubuntu20-wordpress-nginx-php7.4-phpmyadmin-sup
 
 ## Usage
 
-The -p 80:80 maps the internal docker port 80 to the outside port 80 of the host machine. The other -p sets up sshd on port 2222.
+The -p 8080:80 maps the internal docker port 80 to the outside port 80 of the host machine. The other -p sets up sshd on port 2222.
 The -p 9011:9011 is using for supervisord, listing out all services status.
 
 ```bash
@@ -61,7 +61,7 @@ You can start/stop/restart and view the error logs of nginx and php-fpm services
 http://127.0.0.1:9011
 ```
 
-You can also SSH to your container on 127.0.0.1:2222. The default password is _webuser_, and can also be found in .ssh-default-pass.
+You can also SSH to your container on 127.0.0.1:2222. The default password is _webuser_, and can also be found in /container-info.txt.
 
 ```bash
 $ ssh -p 2222 webuser@127.0.0.1
@@ -71,8 +71,8 @@ $ sudo -s
 
 Now that you've got SSH access, you can setup your FTP client the same way, or the SFTP Sublime Text plugin, for easy access to files.
 
-To get the MySQL's password, check the top of the docker container logs for it:
+To get the user as well as database info, check the top of the docker container logs for it:
 
 ```bash
-$ cat /dbuser-pw.txt
+$ docker logs _container-name_
 ```

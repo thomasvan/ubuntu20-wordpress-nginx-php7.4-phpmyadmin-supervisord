@@ -8,7 +8,7 @@ RUN mkdir /var/run/sshd
 RUN mkdir /run/php
 
 ENV container docker
-ENV LC_ALL C
+ENV LC_ALL C.UTF-8
 # Let the conatiner know that there is no tty
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -42,7 +42,7 @@ RUN sed -i -e "s/user\s*=\s*www-data/user = webuser/g" /etc/php/7.4/fpm/pool.d/w
 # replace # by ; RUN find /etc/php/7.0/mods-available/tmp -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
 
 # nginx site conf
-ADD ./nginx-site.conf /etc/nginx/sites-available/default
+ADD ./conf/nginx-site.conf /etc/nginx/sites-available/default
 
 # Supervisor Config
 RUN apt-get install -y supervisor && \
@@ -50,13 +50,20 @@ RUN apt-get install -y supervisor && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
-ADD ./supervisord.conf /etc/supervisord.conf
+ADD ./conf/supervisord.conf /etc/supervisord.conf
 
 # Add a shell user
-RUN useradd -m -d /home/webuser -p $(openssl passwd -1 'asdf1234') -G root -s /bin/bash webuser \
+RUN useradd -m -d /home/webuser -G root -s /bin/bash webuser \
     && usermod -a -G www-data webuser \
     && usermod -a -G sudo webuser \
     && ln -s /usr/share/nginx/www /home/webuser/www
+
+# phpMyAdmin
+RUN curl --location https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz | tar xzf - && \
+    mv phpMyAdmin* /usr/share/phpmyadmin
+ADD conf/config.inc.php /usr/share/phpmyadmin/config.inc.php
+ADD conf/phpmyadmin.conf /etc/phpmyadmin/nginx.conf
+RUN chown -R webuser: /usr/share/phpmyadmin
 
 # Install the application
 ADD http://wordpress.org/latest.tar.gz /usr/share/nginx/latest.tar.gz
@@ -65,6 +72,8 @@ RUN cd /usr/share/nginx/ \
     && rm latest.tar.gz
 
 RUN mv /usr/share/nginx/wordpress /usr/share/nginx/www \
+    && curl -Os `curl -is https://wordpress.org/plugins/nginx-helper/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+\.zip"` \
+    && unzip -qo nginx-helper.*.zip -d /usr/share/nginx/www/wp-content/plugins \
     && chown -R webuser:www-data /usr/share/nginx/www \
     && chmod -R 775 /usr/share/nginx/www
 
